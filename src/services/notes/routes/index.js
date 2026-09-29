@@ -3,11 +3,14 @@ import {
   createNote, getAllNotes, getNoteById, editNoteById, deleteNoteById
 } from '../controller/note-controller.js';
 import validate from '../../../middlewares/validate.js';
+import validateQuery from '../../../middlewares/validateQuery.js';
 import { notePayloadSchema } from '../../../services/notes/validator/schema.js';
+import { noteQuerySchema } from '../../../services/notes/validator/schema.js';
 
 const router = express.Router();
 
 router.post('/notes', validate(notePayloadSchema), createNote);
+router.get('/notes', validateQuery(noteQuerySchema), getAllNotes);
 router.get('/notes', getAllNotes);
 router.get('/notes/:id', getNoteById);
 router.put('/notes/:id', validate(notePayloadSchema), editNoteById);
