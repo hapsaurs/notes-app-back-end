@@ -2,7 +2,8 @@ import express from 'express';
 import {
   createNote, getAllNotes, getNoteById, editNoteById, deleteNoteById
 } from '../controller/note-controller.js';
-import { validate, validateQuery } from '../../../middlewares/validate.js';
+import validate from '../../../middlewares/validate.js';
+import validateQuery from '../../../middlewares/validateQuery.js'; // Sesuaikan jika nama filenya validate-query.js
 import { notePayloadSchema, noteQuerySchema, noteUpdatePayloadSchema } from '../../../services/notes/validator/schema.js';
 import authenticateToken from '../../../middlewares/auth.js';
 
