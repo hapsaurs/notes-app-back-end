@@ -32,5 +32,5 @@ export const getUserById = async (req, res, next) => {
     return next(new NotFoundError('User tidak ditemukan'));
   }
 
-  return response(res, 200, 'User berhasil ditampilkan', user);
+  return response(res, 200, 'User berhasil ditampilkan', { user });
 };

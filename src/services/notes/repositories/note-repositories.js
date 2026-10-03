@@ -57,6 +57,9 @@ class NoteRepositories {
 
     const result = await this.pool.query(query);
 
+    if (!result.rows.length) {
+      return null;
+    }
     return result.rows[0].id;
   }
 
