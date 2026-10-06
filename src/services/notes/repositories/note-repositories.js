@@ -1,6 +1,8 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import { nanoid } from 'nanoid';
+import NotFoundError from '../../../exceptions/not-found-error.js';
+import AuthorizationError from '../../../exceptions/authorization-error.js';
 
 class NoteRepositories {
   constructor() {
@@ -11,7 +13,7 @@ class NoteRepositories {
     const createdAt = new Date().toISOString();
     const updatedAt = createdAt;
     const query = {
-      text: 'INSERT INTO notes(id, title, body, tags, created_at, updated_at, owner) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, body, tags, created_at, updated_at',
+      text: 'INSERT INTO notes(id, title, body, tags, created_at, updated_at, owner) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, body, tags, created_at AS "createdAt", updated_at AS "updatedAt"',
       values: [id, title, body, tags, createdAt, updatedAt, owner],
     };
     const result = await this.pool.query(query);
@@ -20,7 +22,12 @@ class NoteRepositories {
 
   async getNotes(owner) {
     const query = {
-      text: 'SELECT * FROM notes WHERE owner = $1',
+      text: `SELECT notes.id, notes.title, notes.body, notes.tags, 
+                    notes.created_at AS "createdAt", notes.updated_at AS "updatedAt", 
+                    users.username AS "username" 
+             FROM notes 
+             LEFT JOIN users ON users.id = notes.owner 
+             WHERE notes.owner = $1`,
       values: [owner],
     };
     const result = await this.pool.query(query);
@@ -29,7 +36,14 @@ class NoteRepositories {
 
   async getNoteById(id) {
     const query = {
-      text: 'SELECT * FROM notes WHERE id = $1',
+      text: `SELECT notes.id, notes.title, notes.body, notes.tags, 
+                    notes.created_at AS "createdAt", 
+                    notes.updated_at AS "updatedAt",
+                    notes.owner AS "owner",
+                    users.username AS "username"
+            FROM notes 
+            LEFT JOIN users ON users.id = notes.owner 
+            WHERE notes.id = $1`,
       values: [id],
     };
 
@@ -69,12 +83,14 @@ class NoteRepositories {
       values: [id],
     };
     const result = await this.pool.query(query);
+
     if (!result.rows.length) {
-      return null;
+      throw new NotFoundError('Catatan tidak ditemukan');
     }
+
     const note = result.rows[0];
     if (note.owner !== owner) {
-      return null;
+      throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
     }
     return result.rows[0];
   }
