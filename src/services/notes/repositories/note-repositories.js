@@ -1,12 +1,15 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import { nanoid } from 'nanoid';
+import collaborationRepositories from '../../collaborations/repositories/collaboration-repositories';
 import NotFoundError from '../../../exceptions/not-found-error.js';
 import AuthorizationError from '../../../exceptions/authorization-error.js';
+
 
 class NoteRepositories {
   constructor() {
     this.pool = new Pool();
+    this.collaborationRepositories = collaborationRepositories;
   }
   async createNote({ title, body, tags, owner }) {
     const id = nanoid(16);
@@ -93,6 +96,18 @@ class NoteRepositories {
       throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
     }
     return result.rows[0];
+  }
+
+  async verifyNoteAccess(noteId, userId) {
+    const ownerResult = await this.verifyNoteOwner(noteId, userId);
+
+    if (ownerResult) {
+      return ownerResult;
+    }
+
+    const result =  await this.collaborationRepositories.verifyCollaborator(noteId, userId);
+
+    return result;
   }
 }
 
